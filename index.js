@@ -26,6 +26,21 @@ app.post('/adddata', (req, res) => {
 	res.sendStatus(200);
 });
 
+app.post('/reportdata', (req, res) => {
+	const data = req.body;
+	console.log(data);
+	data.push(0.25);
+	probDataJson.push(data);
+	res.sendStatus(200);
+});
+
+app.post('/checkdata', (req, res) => {
+	const data = req.body;
+	console.log('hi', data)
+	generateFullProb(data);
+	res.sendStatus(200);
+});
+
 async function getWeather() {
 	rp(`https://api.darksky.net/forecast/${darkSkyKey.key}/42.484390,-71.191670,255657600?exclude=currently,flags,hourly,minutely`, function (error, response, body) {
   		const dailyData = JSON.parse(body).daily.data[0];
@@ -44,7 +59,7 @@ async function generateProb(data) {
 	const dateNow = Math.floor(Date.now() / 1000);
 	const dateYesterday = dateNow - 84600;
 	
-	/* const todayWeatherData = rp(`https://api.darksky.net/forecast/${darkSkyKey.key}/${data.lat},${data.long},${dateNow}?exclude=currently,flags,hourly,minutely`);
+	const todayWeatherData = rp(`https://api.darksky.net/forecast/${darkSkyKey.key}/${data.lat},${data.long},${dateNow}?exclude=currently,flags,hourly,minutely`);
 	const todayParsedData = JSON.parse(await todayWeatherData);
 	const todayWindSpeed = todayParsedData.daily.data[0].windSpeed;
 	const todayPrecip = todayParsedData.daily.data[0].precipIntensity;
@@ -60,7 +75,47 @@ async function generateProb(data) {
 	}
 	if (avgPrecip > 0.4) {
 		prob +=1;
-	} */
+	}
+
+	console.log(prob / 4);
+
+	probDataJson.push([data.lat, data.long, prob / 4]);
+}
+
+async function generateFullProb(data) {
+	let prob = 0;
+
+	const dateNow = Math.floor(Date.now() / 1000);
+	const dateYesterday = dateNow - 84600;
+	
+	const todayWeatherData = rp(`https://api.darksky.net/forecast/${darkSkyKey.key}/${data.lat},${data.long},${dateNow}?exclude=currently,flags,hourly,minutely`);
+	const todayParsedData = JSON.parse(await todayWeatherData);
+	const todayWindSpeed = todayParsedData.daily.data[0].windSpeed;
+	const todayPrecip = todayParsedData.daily.data[0].precipIntensity;
+	const todayTemp = todayParsedData.daily.data[0].temperature;
+	const todayHumidity = todayParsedData.daily.data[0].humidity * 100;
+
+	const yesterdayWeatherData = rp(`https://api.darksky.net/forecast/${darkSkyKey.key}/${data.lat},${data.long},${dateYesterday}?exclude=currently,flags,hourly,minutely`);
+	const yesterdayParsedData = JSON.parse(await yesterdayWeatherData);
+	const yesterdayPrecip = yesterdayParsedData.daily.data[0].precipIntensity;
+
+	const avgPrecip = (todayPrecip + yesterdayPrecip) / 2;
+
+	console.log('k');
+
+
+	if (todayTemp >= 26) {
+		prob += 1;
+	}
+	if (todayHumidity >= 75) {
+		prob += 1;
+	}
+	if (todayWindSpeed < 7) {
+		prob += 1;
+	}
+	if (avgPrecip > 0.4) {
+		prob +=1;
+	}
 
 	console.log(prob / 4);
 
@@ -76,6 +131,6 @@ setInterval(() => {
 		if (err)
 			console.error(err);	
 	});
-}, 10000);
+}, 2500);
 
 app.listen(port, () => console.log('Listening...'));
