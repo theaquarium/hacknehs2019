@@ -44,7 +44,7 @@ async function generateProb(data) {
 	const dateNow = Math.floor(Date.now() / 1000);
 	const dateYesterday = dateNow - 84600;
 	
-	const todayWeatherData = rp(`https://api.darksky.net/forecast/${darkSkyKey.key}/${data.lat},${data.long},${dateNow}?exclude=currently,flags,hourly,minutely`);
+	/* const todayWeatherData = rp(`https://api.darksky.net/forecast/${darkSkyKey.key}/${data.lat},${data.long},${dateNow}?exclude=currently,flags,hourly,minutely`);
 	const todayParsedData = JSON.parse(await todayWeatherData);
 	const todayWindSpeed = todayParsedData.daily.data[0].windSpeed;
 	const todayPrecip = todayParsedData.daily.data[0].precipIntensity;
@@ -60,9 +60,11 @@ async function generateProb(data) {
 	}
 	if (avgPrecip > 0.4) {
 		prob +=1;
-	}
+	} */
 
-	probDataJson.push([data.lat, data.long, prob]);
+	console.log(prob / 4);
+
+	probDataJson.push([data.lat, data.long, prob / 4]);
 }
 
 setInterval(() => {
